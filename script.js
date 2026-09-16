@@ -22,3 +22,47 @@ if (reducedMotion) {
     video.removeAttribute('autoplay');
   });
 }
+
+const navLinks = [...document.querySelectorAll('nav a[href^="#"]')];
+const navSections = navLinks
+  .map((link) => document.querySelector(link.getAttribute('href')))
+  .filter(Boolean);
+
+let scrollFrame;
+
+const updateActiveNavigation = () => {
+  const marker = Math.min(window.innerHeight * 0.35, 240);
+  let activeId = null;
+
+  navSections.forEach((section) => {
+    if (section.getBoundingClientRect().top <= marker) {
+      activeId = section.id;
+    }
+  });
+
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+    activeId = navSections.at(-1)?.id ?? activeId;
+  }
+
+  navLinks.forEach((link) => {
+    const isActive = link.getAttribute('href') === `#${activeId}`;
+    link.classList.toggle('active', isActive);
+    if (isActive) {
+      link.setAttribute('aria-current', 'location');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  });
+};
+
+const scheduleNavigationUpdate = () => {
+  if (scrollFrame) return;
+  scrollFrame = window.requestAnimationFrame(() => {
+    updateActiveNavigation();
+    scrollFrame = null;
+  });
+};
+
+window.addEventListener('scroll', scheduleNavigationUpdate, { passive: true });
+window.addEventListener('resize', scheduleNavigationUpdate);
+updateActiveNavigation();
